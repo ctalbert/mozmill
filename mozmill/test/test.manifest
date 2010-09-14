@@ -1,0 +1,18 @@
+# Test manifest for Mozmill.
+# Format:
+# <test_type> <test_location> {<options>} {<restrictions>}
+# Where:
+# <test_type>: mozmill - standard test, run mozmill, load test
+#               restart - mozmill restart test, assumes test_location is a directory
+#               python  - assumes the test_location is a directory of python files
+#                         or a python file which contains a test a la python 
+#                         unittest style.
+# <test_location>: file of test or directory of tests, if a directory, then mozmill
+#                  will start with a -t <dir> parameter, otherwise we'll load
+#                  that file specifcially.  Restart tests will error if test_location
+#                   is *not* a directory.
+# <options>: extra options to specify on the mozmill/mozmill restart command
+#             line (profile settings etc etc.
+# <restrictions>: specific binary types, interesting restrictions etc. 
+#                 Format TBD, probably reftest format style.
+mozmill test_unit.js
