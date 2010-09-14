@@ -1,0 +1,5 @@
+restart test_browser
+restart test_fails
+restart test_nothing
+restart test_python_callback
+restart test_user_restart
