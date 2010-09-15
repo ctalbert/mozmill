@@ -16,3 +16,10 @@
 # <restrictions>: specific binary types, interesting restrictions etc. 
 #                 Format TBD, probably reftest format style.
 mozmill test_unit.js
+mozmill test_assert
+mozmill test_controller
+mozmill test_elementslib
+mozmill test_integration
+mozmill test_pythoncallbacks
+mozmill test_something
+mozmill test_usershutdown.js
