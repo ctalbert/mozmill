@@ -226,7 +226,7 @@ class TestRunner():
     self.maniParser = ManifestParser(results)
 
   def run(self):
-    pdb.set_trace()
+    #pdb.set_trace()
     for mani in self.manifests:
       tests = self.maniParser.parse(mani)
       # tests are a dict of {<testtype>: [testlist]}
@@ -269,7 +269,6 @@ class TestRunner():
       # Set up our logging options
       args.append('--showall')
       args.append('--logfile=templog.log')
-      pdb.set_trace()
       p = subprocess.Popen(args)
       didhang = self.checkForHang(p)
     
@@ -303,7 +302,7 @@ class TestRunner():
     
 
 def main():
-  pdb.set_trace()
+  #pdb.set_trace()
   parser = MuttOptions()
   options, args = parser.parse_args()
 
