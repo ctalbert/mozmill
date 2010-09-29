@@ -9,6 +9,8 @@ import subprocess
 import time
 import pdb
 
+# Manifest files have a .list extension
+MANIFEST_RE = re.compile(".*\.list$")
 
 def debug(aMsg):
   print('DBG::' + str(aMsg))
@@ -96,14 +98,22 @@ class Walker:
     manifestList = []
     if manifest:
       manifestList.append(manifest)
-    elif parentdir:
-      manifestList = self.walkDir(parentdir)
     else:
-      manifestList = self.walkDir()
+      manifestList = self.walkDir(parentdir)
     return manifestList
 
   def walkDir(self, seed=None):
-    pass
+    # Walks a directory tree looking for manifest files, builds a list of them
+    # and returns it.
+    rtnval = []
+    if (not seed):
+      seed = os.getcwd()
+
+    for root, dirs, files in os.walk(seed):
+        for f in files:
+          if (MANIFEST_RE.search(f)):
+            rtnval.append(os.path.join(root,f))
+    return rtnval
 
 class ResultCollector:
   def __init__(self, logfile):
@@ -112,23 +122,48 @@ class ResultCollector:
     else:
       self.logfile = None
 
+    self.passed = 0
+    self.failed = 0
+    self.skipped = 0
+
   def write(self, aMsg):
     if (self.logfile):
       self.logfile.write(str(aMsg))
     else:
       print str(aMsg)
 
+  def countStats(self, regex, value):
+    result = regex.search(value)
+    newvalue = 0
+    if (result):
+      newvalue = int(val.group(1))
+    return newvalue
+
   def parseResults(self, resultsfile, didhang):
     # TODO: Do something better with this to tally the results
     f = open(resultsfile, "r")
+    passre = re.compile('^INFO Passed: (\d+)')
+    failre = re.compile('^INFO Failed: (\d+)')
+    skipre = re.compile('^INFO Skipped: (\d+)')
+
     for line in f:
       self.write(line)
+      
+      self.passed = self.passed + self.countStats(passre, line)
+      self.failed = self.failed + self.countStats(failre, line)
+      self.skipped = self.skipped + self.countStats(skipre, line)
+
     if (didhang):
       self.write("FAIL Mozmill Hung\n")
-    
+
+    self.write("********** END OF TEST ***************")
+ 
 
   def summarizeResults(self):
-    self.write("SUMMARY GOES HERE\n")
+    self.write("<<<<<<<<<<<<<<<< SUMMARY >>>>>>>>>>>>>>>>>>>")
+    self.write("INFO: Total Passed: " + str(self.passed))
+    self.write("INFO: Total Failed: " + str(self.failed))
+    self.write("INFO: Total Skipped: " + str(self.skipped))
 
   def shutdown(self):
     if (self.logfile):
@@ -176,12 +211,12 @@ class MuttOptions(optparse.OptionParser):
     self.add_option("--parent-dir",
                     action="store",
                     dest="parentdir",
-                    help="Restricts the directory walker to a specific parent directory. The directory must include a child named 'test'")
+                    help="Restricts the directory walker to a specific parent directory instead of cwd.  It looks for manifests with a .list extension")
     defaults["parentdir"] = None
     
     self.set_defaults(**defaults)
     usage = """\
-Welcome to MUTT, Mozmill UniT Tester.  All arguments are optional.  Run some tests.  Have fun.  Envision world peace and bug free software."""
+Welcome to MUTT, Mozmill UniT Tester.  All arguments are optional.  Run some tests.  Have fun.  Visualize world peace and bug free software."""
 
   def verifyOptions(self, options):
     if (options.xrepath and not os.path.exists(options.xrepath)):
@@ -225,8 +260,22 @@ class TestRunner():
     # Cache our manifest parser
     self.maniParser = ManifestParser(results)
 
+    # TODO: Hardcoded until --restart lands.  Set this to "none" to un-hardcode
+    self.isMozmillOld = True
+
+  def isMozmillVersion1(self):
+    if (self.isMozmillOld == None):
+      args = ['mozmill']
+      args.append('--version')
+      p.subprocess.Popen(args, stdout=subprocess.PIPE)
+      output = p.communicate()[0]
+      if (re.search("^1\..*", output.split()[1])):
+        self.isMozmillOld = True
+      else:
+        self.isMozmillOld = False
+    return self.isMozmillOld
+
   def run(self):
-    #pdb.set_trace()
     for mani in self.manifests:
       tests = self.maniParser.parse(mani)
       # tests are a dict of {<testtype>: [testlist]}
@@ -235,7 +284,7 @@ class TestRunner():
       if 'mozmill' in tests:
         self.runMozmillTests(tests['mozmill'])
       if 'restart' in tests:
-        self.runRestartTests(tests['restart'])
+        self.runMozmillTests(tests['restart'], True)
   
     self.log.write("Test Run Finished:\n")
     self.log.summarizeResults()
@@ -246,18 +295,17 @@ class TestRunner():
   
   # restartcmd is used to pass in the restart command - either --restart for 2.0 or
   # restart for < 2.0.  This way we can do the right thing.
-  def runMozmillTests(self, testlist, restartcmd = None):
+  def runMozmillTests(self, testlist, doRestart=None):
     self.log.write("Running Mozmill Tests\n")
     
     for test in testlist:
-      # Handle restart issue
-      if (restartcmd == "restart"):
-        args = ['mozmill-restart']
-      else:
-        args = ['mozmill']
+      args = ['mozmill']
 
-      if (restartcmd == "--restart"):
-        args.append(restartcmd)
+      # Handle restart issue
+      if (doRestart and self.isMozmillVersion1()):
+        args = ['mozmill-restart']
+      elif (doRestart): 
+        args.append('--restart')
 
       # Handle optional binary path
       if (self.xrepath):
