@@ -1155,6 +1155,12 @@ MozMillController.prototype.dragDropElemToElem = function (dstart, ddest) {
   return true;
 }
 
+MozMillController.prototype.synthesizeDragStart = function (aelement, aexpectedDragData, awindow, x, y) {
+  EventUtils.synthesizeDragStart(aelement, aexpectedDragData, awindow, x, y);
+}
+MozMillController.prototype.syntesizeDrop = function (src, dest, dragData, dropEffect, awindow) {
+  EventUtils.syntesizeDrop(src, dest, dragData, dropEffect, awindow);
+}
 function preferencesAdditions(controller) {
   var mainTabs = controller.window.document.getAnonymousElementByAttribute(controller.window.document.documentElement, 'anonid', 'selector');
   controller.tabs = {};
