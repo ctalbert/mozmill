@@ -41,7 +41,9 @@ var EXPORTED_SYMBOLS = ["openFile", "saveFile", "saveAsFile", "genBoiler",
                         "getFile", "Copy", "getChromeWindow", "getWindows", "runEditor",
                         "runFile", "getWindowByTitle", "getWindowByType", "tempfile", 
                         "getMethodInWindows", "getPreference", "setPreference",
-                        "sleep", "assert", "unwrapNode", "TimeoutError", "waitFor", "waitForEval"];
+                        "sleep", "assert", "unwrapNode", "TimeoutError", "waitFor", "waitForEval",
+                        "takeScreenshot",
+                       ];
 
 var hwindow = Components.classes["@mozilla.org/appshell/appShellService;1"]
               .getService(Components.interfaces.nsIAppShellService)
@@ -436,3 +438,59 @@ function waitForEval(expression, timeout, interval, subject) {
   return true;
 }
 
+/**
+ * Takes a screenshot of the specified document
+ */
+function takeScreenshot(node, destFile, elements) {
+  dump(node.ownerDocument + "\n");
+  var doc = node.ownerDocument || node;
+  var win = doc.defaultView;
+  if ("getBoundingClientRect" in node) {
+    var rect = node.getBoundingClientRect();
+    var width = rect.width;
+    var height = rect.height;
+    var top = rect.top;
+    var left = rect.left;
+  } else {
+    var width = win.innerWidth;
+    var height = win.innerHeight;
+    var top = 0;
+    var left = 0;
+  }
+
+  var canvas = doc.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
+  canvas.width = width;
+  canvas.height = height;
+
+  var ctx = canvas.getContext("2d");
+  // Draws the DOM contents of the window to the canvas
+  ctx.drawWindow(win, left, top, width, height, "rgb(255,255,255)");
+  // Save the canvas to destFile
+  saveCanvas(canvas, destFile);
+}
+
+/**
+ * Saves a canvas element to a file
+ */
+function saveCanvas(canvas, destFile) {
+  // convert string filepath to an nsIFile
+  var file = Components.classes["@mozilla.org/file/local;1"]
+                                    .createInstance(Components.interfaces.nsILocalFile);
+  file.initWithPath(destFile);
+                             
+  // create a data url from the canvas and then create URIs of the source and targets  
+  var io = Components.classes["@mozilla.org/network/io-service;1"]
+                                    .getService(Components.interfaces.nsIIOService);
+  var source = io.newURI(canvas.toDataURL("image/png", ""), "UTF8", null);
+  var target = io.newFileURI(file)
+                                                              
+  // prepare to save the canvas data
+  var persist = Components.classes["@mozilla.org/embedding/browser/nsWebBrowserPersist;1"]
+                                    .createInstance(Components.interfaces.nsIWebBrowserPersist);
+
+  persist.persistFlags = Components.interfaces.nsIWebBrowserPersist.PERSIST_FLAGS_REPLACE_EXISTING_FILES;
+  persist.persistFlags |= Components.interfaces.nsIWebBrowserPersist.PERSIST_FLAGS_AUTODETECT_APPLY_CONVERSION;
+                                                                                                    
+  // save the canvas data to the file
+  persist.saveURI(source, null, null, null, null, file);
+}
