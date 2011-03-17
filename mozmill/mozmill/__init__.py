@@ -79,6 +79,7 @@ class TestResults(object):
 
         # other information
         self.mozmill_version = package_metadata.get('Version')
+        self.screenshots = []
 
     def events(self):
         """events the MozMill class will dispatch to"""
@@ -148,6 +149,7 @@ class MozMill(object):
         self.add_listener(self.endRunner_listener, eventType='mozmill.endRunner')
         self.add_listener(self.startTest_listener, eventType='mozmill.setTest')
         self.add_listener(self.userShutdown_listener, eventType='mozmill.userShutdown')
+        self.add_listener(self.screenShot_listener, eventType='mozmill.screenShot');
 
         # add listeners for event handlers
         self.handlers = [results]
@@ -189,6 +191,10 @@ class MozMill(object):
         - resetProfile : reset the profile after shutdown
         """
         self.shutdownMode = obj
+
+    def screenShot_listener(self, obj): 
+        self.results.screenshots.append(obj)
+    
 
     ### methods for startup
 

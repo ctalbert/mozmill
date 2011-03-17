@@ -633,9 +633,27 @@ MozMillController.prototype.radio = function(el)
   return true;
 }
 
-MozMillController.prototype.screenShot = function(node, destFile, highlights) {
+/**
+ * Take a screenshot of specified node
+ * node: either a window or DOM element
+ * name: name of the screenshot
+ * highlights: list of additional elements to highlight with a red rectangle
+ */
+MozMillController.prototype.screenShot = function(node, name, highlights) {
+  if (!node) {
+    throw new Error("node is undefined");
+  }
+  
   if ("getNode" in node) node = node.getNode();
-  utils.takeScreenshot(node, destFile, highlights);
+  var dataURL = utils.takeScreenshot(node, highlights);
+  var obj = { "dataURL": dataURL,
+              "name": name,
+              "timestamp": Math.round(((new Date()).getTime()-Date.UTC(1970,0,1))/1000),
+            }
+
+  this.fireEvent("screenShot", obj);
+
+  frame.events.pass({'function':'controller.screenShot()'});
 }
 
 MozMillController.prototype.waitFor = function(callback, message, timeout,

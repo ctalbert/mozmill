@@ -439,28 +439,26 @@ function waitForEval(expression, timeout, interval, subject) {
 }
 
 /**
- * Takes a screenshot of the specified document
+ * Takes a screenshot of the specified DOM node 
  */
-function takeScreenshot(node, destFile, highlights) {
+function takeScreenshot(node, highlights) {
+  var rect;
+  // node can be either a window or an arbitrary DOM node
   try {
-    var win = node.ownerDocument.defaultView;
-  } catch (e) {
-    var win = node;
-  }
-
-  if ("getBoundingClientRect" in node) {
-    var rect = node.getBoundingClientRect();
+    var win = node.ownerDocument.defaultView;   // node is an arbitrary DOM node
+    rect = node.getBoundingClientRect();
     var width = rect.width;
     var height = rect.height;
     var top = rect.top;
     var left = rect.left;
-    var needsOffset = false;
-  } else {
+    var needsOffset = false;                    // offset for highlights not needed as they will be relative to this node
+  } catch (e) {
+    var win = node;                             // node is a window
     var width = win.innerWidth;
     var height = win.innerHeight;
     var top = 0;
     var left = 0;
-    var needsOffset = true;
+    var needsOffset = true;                     // offset needed for highlights to take 'outerHeight' of window into account
   }
 
   var canvas = win.document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
@@ -470,48 +468,36 @@ function takeScreenshot(node, destFile, highlights) {
   var ctx = canvas.getContext("2d");
   // Draws the DOM contents of the window to the canvas
   ctx.drawWindow(win, left, top, width, height, "rgb(255,255,255)");
-
-  ctx.lineWidth = "3";
-  ctx.strokeStyle = "red";
-  ctx.save();
   
+  // This section is for drawing a red rectangle around each element passed in via the highlights array
   if (highlights) {
+    ctx.lineWidth = "2";
+    ctx.strokeStyle = "red";
+    ctx.save();
+
     for (var i = 0; i < highlights.length; ++i) {
-      var elem = highlights[i].getNode();
+      var elem = highlights[i]
+      if ("getNode" in elem) elem = elem.getNode();
+      rect = elem.getBoundingClientRect();
+
       var offsetY = 0;      
       if (needsOffset) {
-        offsetY = elem.ownerDocument.defaultView.outerHeight - elem.ownerDocument.defaultView.innerHeight;
+        var chromeHeight = elem.ownerDocument.defaultView.outerHeight - elem.ownerDocument.defaultView.innerHeight;
+        // window.innerHeight doesn't include the addon bar, so account for this if present
+        var addonbar = win.document.getElementById("addon-bar");
+        if (addonbar && chromeHeight > 0) {     // chromeHeight == 0 means elem is already in the chrome and doesn't need the addonbar offset
+          chromeHeight -= addonbar.scrollHeight;
+        }
+        offsetY = chromeHeight;
+      } else {
+        // Don't need to offset the window chrome, just make top relative to containing node
+        offsetY = -top;
       }
-      rect = elem.getBoundingClientRect();
+
+      // Draw the rectangle
       ctx.strokeRect(rect.left, rect.top + offsetY, rect.width, rect.height);
     }
   }
-  // Save the canvas to destFile
-  saveCanvas(canvas, destFile);
-}
 
-/**
- * Saves a canvas element to a file
- */
-function saveCanvas(canvas, destFile) {
-  // convert string filepath to an nsIFile
-  var file = Components.classes["@mozilla.org/file/local;1"]
-                                    .createInstance(Components.interfaces.nsILocalFile);
-  file.initWithPath(destFile);
-                             
-  // create a data url from the canvas and then create URIs of the source and targets  
-  var io = Components.classes["@mozilla.org/network/io-service;1"]
-                                    .getService(Components.interfaces.nsIIOService);
-  var source = io.newURI(canvas.toDataURL("image/png", ""), "UTF8", null);
-  var target = io.newFileURI(file)
-                                                              
-  // prepare to save the canvas data
-  var persist = Components.classes["@mozilla.org/embedding/browser/nsWebBrowserPersist;1"]
-                                    .createInstance(Components.interfaces.nsIWebBrowserPersist);
-
-  persist.persistFlags = Components.interfaces.nsIWebBrowserPersist.PERSIST_FLAGS_REPLACE_EXISTING_FILES;
-  persist.persistFlags |= Components.interfaces.nsIWebBrowserPersist.PERSIST_FLAGS_AUTODETECT_APPLY_CONVERSION;
-                                                                                                    
-  // save the canvas data to the file
-  persist.saveURI(source, null, null, null, null, file);
+  return canvas.toDataURL("image/png", "");
 }
