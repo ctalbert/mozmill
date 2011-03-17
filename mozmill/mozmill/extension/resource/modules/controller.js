@@ -633,11 +633,9 @@ MozMillController.prototype.radio = function(el)
   return true;
 }
 
-MozMillController.prototype.screenShot = function(el, destFile) {
-  if ("getNode" in el)  var node = el.getNode();
-  else var node = el || this.window.document;
-  
-  utils.takeScreenshot(node, destFile);
+MozMillController.prototype.screenShot = function(node, destFile, highlights) {
+  if ("getNode" in node) node = node.getNode();
+  utils.takeScreenshot(node, destFile, highlights);
 }
 
 MozMillController.prototype.waitFor = function(callback, message, timeout,

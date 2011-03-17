@@ -441,30 +441,51 @@ function waitForEval(expression, timeout, interval, subject) {
 /**
  * Takes a screenshot of the specified document
  */
-function takeScreenshot(node, destFile, elements) {
-  dump(node.ownerDocument + "\n");
-  var doc = node.ownerDocument || node;
-  var win = doc.defaultView;
+function takeScreenshot(node, destFile, highlights) {
+  try {
+    var win = node.ownerDocument.defaultView;
+  } catch (e) {
+    var win = node;
+  }
+
   if ("getBoundingClientRect" in node) {
     var rect = node.getBoundingClientRect();
     var width = rect.width;
     var height = rect.height;
     var top = rect.top;
     var left = rect.left;
+    var needsOffset = false;
   } else {
     var width = win.innerWidth;
     var height = win.innerHeight;
     var top = 0;
     var left = 0;
+    var needsOffset = true;
   }
 
-  var canvas = doc.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
+  var canvas = win.document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
   canvas.width = width;
   canvas.height = height;
 
   var ctx = canvas.getContext("2d");
   // Draws the DOM contents of the window to the canvas
   ctx.drawWindow(win, left, top, width, height, "rgb(255,255,255)");
+
+  ctx.lineWidth = "3";
+  ctx.strokeStyle = "red";
+  ctx.save();
+  
+  if (highlights) {
+    for (var i = 0; i < highlights.length; ++i) {
+      var elem = highlights[i].getNode();
+      var offsetY = 0;      
+      if (needsOffset) {
+        offsetY = elem.ownerDocument.defaultView.outerHeight - elem.ownerDocument.defaultView.innerHeight;
+      }
+      rect = elem.getBoundingClientRect();
+      ctx.strokeRect(rect.left, rect.top + offsetY, rect.width, rect.height);
+    }
+  }
   // Save the canvas to destFile
   saveCanvas(canvas, destFile);
 }
