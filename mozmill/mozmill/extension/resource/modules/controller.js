@@ -645,12 +645,13 @@ MozMillController.prototype.screenShot = function(node, name, highlights) {
   }
   
   if ("getNode" in node) node = node.getNode();
-  var dataURL = utils.takeScreenshot(node, highlights);
-  var obj = { "dataURL": dataURL,
-              "name": name,
-              "timestamp": Math.round(((new Date()).getTime()-Date.UTC(1970,0,1))/1000),
-            }
+  var filePath = utils.takeScreenshot(node, name, highlights);
 
+  var d = new Date();
+  var obj = { "filePath": filePath,
+              "name": name,
+              "timestamp": d.toLocaleString(),
+            }
   this.fireEvent("screenShot", obj);
 
   frame.events.pass({'function':'controller.screenShot()'});

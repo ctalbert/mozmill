@@ -441,7 +441,7 @@ function waitForEval(expression, timeout, interval, subject) {
 /**
  * Takes a screenshot of the specified DOM node 
  */
-function takeScreenshot(node, highlights) {
+function takeScreenshot(node, name, highlights) {
   var rect;
   // node can be either a window or an arbitrary DOM node
   try {
@@ -499,5 +499,30 @@ function takeScreenshot(node, highlights) {
     }
   }
 
-  return canvas.toDataURL("image/png", "");
+  return saveCanvas(canvas, name);
+}
+
+function saveCanvas(canvas, name) {
+  var file = Components.classes["@mozilla.org/file/directory_service;1"]
+                                .getService(Components.interfaces.nsIProperties)
+                                .get("TmpD", Components.interfaces.nsIFile);
+  file.append("mozmill_screens");
+  file.append(name + ".png");
+  file.createUnique(Components.interfaces.nsIFile.NORMAL_FILE_TYPE, 0666);
+
+  // create a data url from the canvas and then create URIs of the source and targets  
+  var io = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
+  var source = io.newURI(canvas.toDataURL("image/png", ""), "UTF8", null);
+  var target = io.newFileURI(file)
+ 
+  // prepare to save the canvas data
+  var persist = Components.classes["@mozilla.org/embedding/browser/nsWebBrowserPersist;1"].createInstance(Components.interfaces.nsIWebBrowserPersist);
+
+  persist.persistFlags = Components.interfaces.nsIWebBrowserPersist.PERSIST_FLAGS_REPLACE_EXISTING_FILES;
+  persist.persistFlags |= Components.interfaces.nsIWebBrowserPersist.PERSIST_FLAGS_AUTODETECT_APPLY_CONVERSION;
+ 
+  // save the canvas data to the file
+  persist.saveURI(source, null, null, null, null, file);
+
+  return file.path;
 }
