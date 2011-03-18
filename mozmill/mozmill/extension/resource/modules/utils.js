@@ -442,23 +442,23 @@ function waitForEval(expression, timeout, interval, subject) {
  * Takes a screenshot of the specified DOM node 
  */
 function takeScreenshot(node, name, highlights) {
-  var rect;
+  var rect, win, width, height, left, top, needsOffset;
   // node can be either a window or an arbitrary DOM node
   try {
-    var win = node.ownerDocument.defaultView;   // node is an arbitrary DOM node
+    win = node.ownerDocument.defaultView;   // node is an arbitrary DOM node
     rect = node.getBoundingClientRect();
-    var width = rect.width;
-    var height = rect.height;
-    var top = rect.top;
-    var left = rect.left;
-    var needsOffset = false;                    // offset for highlights not needed as they will be relative to this node
+    width = rect.width;
+    height = rect.height;
+    top = rect.top;
+    left = rect.left;
+    needsOffset = false;                    // offset for highlights not needed as they will be relative to this node
   } catch (e) {
-    var win = node;                             // node is a window
-    var width = win.innerWidth;
-    var height = win.innerHeight;
-    var top = 0;
-    var left = 0;
-    var needsOffset = true;                     // offset needed for highlights to take 'outerHeight' of window into account
+    win = node;                             // node is a window
+    width = win.innerWidth;
+    height = win.innerHeight;
+    top = 0;
+    left = 0;
+    needsOffset = true;                     // offset needed for highlights to take 'outerHeight' of window into account
   }
 
   var canvas = win.document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
@@ -480,7 +480,7 @@ function takeScreenshot(node, name, highlights) {
       if ("getNode" in elem) elem = elem.getNode();
       rect = elem.getBoundingClientRect();
 
-      var offsetY = 0;      
+      var offsetY = 0;
       if (needsOffset) {
         var chromeHeight = elem.ownerDocument.defaultView.outerHeight - elem.ownerDocument.defaultView.innerHeight;
         // window.innerHeight doesn't include the addon bar, so account for this if present
