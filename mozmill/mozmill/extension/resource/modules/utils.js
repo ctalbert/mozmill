@@ -488,7 +488,7 @@ function takeScreenshot(node, name, highlights) {
     }
   }
 
-  return saveCanvas(canvas, name);
+  return canvas.toDataURL("image/png","");//saveCanvas(canvas, name);
 }
 
 function saveCanvas(canvas, name) {

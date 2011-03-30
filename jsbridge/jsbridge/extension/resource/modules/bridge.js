@@ -116,7 +116,6 @@ Bridge.prototype._setAttribute = function (obj, name, value) {
   return value;
 }
 Bridge.prototype.setAttribute = function (uuid, obj, name, value) {
-  // log(uuid, String(obj), name, String(value))
   try {
     var result = this._setAttribute(obj, name, value);
   } catch(e) {

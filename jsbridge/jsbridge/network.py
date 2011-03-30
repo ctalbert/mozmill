@@ -70,7 +70,8 @@ class Telnet(asyncore.dispatcher):
         """override method of asyncore.dispatcher"""
         self.close()
 
-    def handle_expt(self): self.close() # connection failed, shutdown
+    def handle_expt(self): 
+        self.close() # connection failed, shutdown
     
     def writable(self):
         return (len(self.buffer) > 0)
@@ -198,7 +199,7 @@ class Bridge(Telnet):
             try:
                 self.send('')
             except socket.error:
-                raise JSBridgeDisconnectError("Connected disconnected")
+                raise JSBridgeDisconnectError("JSBridge Socket Disconnected: %s" % e)
 
         Bridge.timeout_ctr = 0. # reset the counter
         

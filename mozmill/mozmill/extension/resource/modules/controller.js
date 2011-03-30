@@ -312,7 +312,7 @@ MozMillController.prototype.screenShot = function(node, name, highlights) {
   
   if ("getNode" in node) node = node.getNode();
   var filePath = utils.takeScreenshot(node, name, highlights);
-
+  dump(filePath + "\n");
   var d = new Date();
   var obj = { "filePath": filePath,
               "name": name,
