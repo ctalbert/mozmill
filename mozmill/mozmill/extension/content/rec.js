@@ -40,7 +40,6 @@ var inspection = {}; Components.utils.import('resource://mozmill/modules/inspect
 var utils = {}; Components.utils.import('resource://mozmill/modules/utils.js', utils);
 var objects = {}; Components.utils.import('resource://mozmill/stdlib/objects.js', objects);
 var arrays = {}; Components.utils.import('resource://mozmill/stdlib/arrays.js', arrays);
-var events = {}; Components.utils.import('resource://mozmill/modules/events.js', events);
 // var logging = {}; Components.utils.import('resource://mozmill/stdlib/logging.js', logging);
 var controller = {};  Components.utils.import('resource://mozmill/modules/controller.js', controller);
 
@@ -253,7 +252,9 @@ RecorderConnector.prototype.unbindListeners = function(frame) {
 RecorderConnector.prototype.observer = {
   observe: function(subject,topic,data){
     var defer = function(){
-      controller.waitForEval("subject.documentLoaded == true", 10000, 100, subject)
+      controller.waitFor(function() {
+                           return subject.documentLoaded == true;
+                         }, undefined, 10000, 100);
       MozMillrec.bindListeners(subject);
     }
     window.setTimeout(defer, 500);

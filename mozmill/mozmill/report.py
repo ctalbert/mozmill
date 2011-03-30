@@ -65,7 +65,8 @@ class Report(object):
   @classmethod
   def add_options(cls, parser):
     """add options to the parser"""
-    parser.add_option("--report", dest="report", default=None,
+    parser.add_option("--report", dest="report",
+                      default=None, metavar='URL',
                       help="Report the results. Requires url to results server. Use 'stdout' for stdout.")
 
   def stop(self, results, fatal=False):
@@ -75,7 +76,8 @@ class Report(object):
   def get_report(self, results):
     """get the report results"""
 
-    report = {'mozmill_version': results.mozmill_version,
+    report = {'report_type': 'mozmill-test',
+              'mozmill_version': results.mozmill_version,
               'time_start': results.starttime.strftime(self.date_format),
               'time_end': results.endtime.strftime(self.date_format),
               'time_upload': 'n/a',

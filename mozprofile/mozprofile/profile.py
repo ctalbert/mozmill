@@ -42,6 +42,7 @@ __all__ = ['Profile', 'FirefoxProfile', 'ThunderbirdProfile', 'print_addon_ids']
 import os
 import sys
 import tempfile
+import urllib2
 import zipfile
 from xml.dom import minidom
 
@@ -113,14 +114,20 @@ class Profile(object):
             addon_id = None
             for elem in desc:
                 apps = elem.getElementsByTagName('em:targetApplication')
+                apps.extend(elem.getElementsByTagName('targetApplication'))
                 if apps:
                     for app in apps:
                         # remove targetApplication nodes, they contain id's we aren't interested in
                         elem.removeChild(app)
+
+                    # find the id tag
                     if elem.getElementsByTagName('em:id'):
                         addon_id = str(elem.getElementsByTagName('em:id')[0].firstChild.data)
                     elif elem.hasAttribute('em:id'):
                         addon_id = str(elem.getAttribute('em:id'))
+                    elif elem.getElementsByTagName('id'):
+                        addon_id = str(elem.getElementsByTagName('id')[0].firstChild.data)
+                    
             return addon_id
 
         doc = minidom.parse(os.path.join(addon_path, 'install.rdf')) 
@@ -134,11 +141,24 @@ class Profile(object):
     def install_addon(self, path):
         """Installs the given addon or directory of addons in the profile."""
 
+        # if the addon is a url, download it
+        # note that this won't work with protocols urllib2 doesn't support
+        if '://' in path:
+            response = urllib2.urlopen(path)
+            fd, path = tempfile.mkstemp(suffix='.xpi')
+            os.write(fd, response.read())
+            os.close(fd)
+            tmpfile = path
+        else:
+            tmpfile = None
+
         # if the addon is a directory, install all addons in it
         addons = [path]
         if not path.endswith('.xpi') and not os.path.exists(os.path.join(path, 'install.rdf')):
+            assert os.path.isdir(path)
             addons = [os.path.join(path, x) for x in os.listdir(path)]
-           
+
+        # install each addon
         for addon in addons:
             tmpdir = None
             if addon.endswith('.xpi'):
@@ -168,6 +188,10 @@ class Profile(object):
             # remove the temporary directory, if any
             if tmpdir:
                 rmtree(tmpdir)
+
+        # remove temporary file, if any
+        if tmpfile:
+            os.remove(tmpfile)
 
     def clean_addons(self):
         """Cleans up addons in the profile."""
