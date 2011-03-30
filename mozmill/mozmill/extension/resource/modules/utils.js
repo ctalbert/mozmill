@@ -41,13 +41,9 @@ var EXPORTED_SYMBOLS = ["openFile", "saveFile", "saveAsFile", "genBoiler",
                         "getFile", "Copy", "getChromeWindow", "getWindows", "runEditor",
                         "runFile", "getWindowByTitle", "getWindowByType", "tempfile", 
                         "getMethodInWindows", "getPreference", "setPreference",
-<<<<<<< HEAD
-                        "sleep", "assert", "unwrapNode", "TimeoutError", "waitFor", "waitForEval",
+                        "sleep", "assert", "unwrapNode", "TimeoutError", "waitFor",
                         "takeScreenshot",
                        ];
-=======
-                        "sleep", "assert", "unwrapNode", "TimeoutError", "waitFor"];
->>>>>>> bc4310b0e2f76b35a73bb275dfa03ce13f3553c9
 
 var hwindow = Components.classes["@mozilla.org/appshell/appShellService;1"]
               .getService(Components.interfaces.nsIAppShellService)
