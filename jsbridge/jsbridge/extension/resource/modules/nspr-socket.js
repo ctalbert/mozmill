@@ -34,7 +34,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
- 
+
+const DEBUG_ON = true;
+const BUFFER_SIZE = 4096;
 var nspr = {}; Components.utils.import("resource://jsbridge/modules/nspr.js", nspr);
 var nsprTypes = nspr.nsprTypes;
 nspr = nspr.nsprSockets;
@@ -80,6 +82,7 @@ var ServerSocket = function(port) {
 
   this.addr = addr;
   this.fd = fd;
+  log("jsbridge::NSPR Socket Setup");
 }
 
 ServerSocket.prototype = {
@@ -95,6 +98,7 @@ ServerSocket.prototype = {
   },
 
   close : function() {
+    log("jsbridge::NSPR socket closing"); 
     return nspr.PR_Close(this.fd); 
   }
 }
@@ -106,18 +110,46 @@ var Client = function(fd) {
 
 Client.prototype = {
   onMessage : function(callback, interval, bufsize) {
-    bufsize = bufsize || 4096;
+    bufsize = bufsize || BUFFER_SIZE;
     interval = interval || 100; // polling interval
     var that = this;
 
     (function getMessage() {
-      var buffer = new nspr.buffer(bufsize);
-      var bytes = nspr.PR_Recv(that.fd, buffer, bufsize, 0, nspr.PR_INTERVAL_NO_WAIT);
-      if(bytes > 0) {
-        var message = buffer.readString();
+      var message = '';
+      var buffer = null;
+      var bytesRemaining = 0;
+      var bytes = 0;
+      do { 
+        log("jsbridge::NSPR onMessage: loop starting bufsize: " + bufsize);
+        if (bufsize > BUFFER_SIZE) { 
+          buffer = new nspr.buffer(BUFFER_SIZE);
+          currentbufsize  = bufsize - BUFFER_SIZE;
+        } else { 
+          buffer = new nspr.buffer(bufsize);
+          currentbufsize = bufsize;
+        }
+
+        // Read from the socket
+        bytes = nspr.PR_Recv(that.fd, buffer, currentbufsize, 0, nspr.PR_INTERVAL_NO_WAIT);
+        log("jsbridge::NSPR onMessage: bytes = " + bytes);
+        if(bytes > 0) {
+          message = message + buffer.readString();
+        } /*else if (bytes == 0) {
+          if (that.handleDisconnect)
+            log("jsbridge::NSPR onMessage handling disconnect");
+            that.handleDisconnect();
+          log("jsbridge::NSPR onMessage returning");
+          return;
+        }*/
+        // Calculate how many bytes are remaining to be acquired
+        bufsize = bufsize - currentbufsize;
+        log("jsbridge::NSPR bufsize: " + bufsize + " and bytes: " + bytes);
+      } while( (bufsize > 0) && (bytes > 0));
+
+      if (message && bytes > 0) {
+        log("jsbridge::NSPR onMessage: got data: " + message);
         callback(message);
-      }
-      else if(bytes == 0) {
+      } else {
         if(that.handleDisconnect)
           that.handleDisconnect();
         return;
@@ -127,15 +159,40 @@ Client.prototype = {
   },
 
   onDisconnect : function(callback) {
+    log("jsbridge::NSPR onDisconnect");
     this.handleDisconnect = callback;
   },
 
   sendMessage : function(message) {
-    var buffer = new nspr.buffer(message);
-    nspr.PR_Send(this.fd, buffer, message.length, 0, nspr.PR_INTERVAL_NO_WAIT);
+    var msgoffset = 0;
+    log("jsbridge::NSPR starting sendmessage of size: " + message.length);
+    do {
+      var parts = '';
+      if (message.length > BUFFER_SIZE) {
+        parts = message.slice(msgoffset, msgoffset + BUFFER_SIZE);
+      } else {
+        parts = message;
+      }
+      log("jsbridge::NSPR sending message with msgoffset: " + msgoffset);
+      log("jsbridge::NSPR sending message with part length: " + parts.length);
+      // Make our buffer
+      var buffer = new nspr.buffer(parts);
+      
+      // Update the offset
+      msgoffset += parts.length;
+  
+      log("jsbridge::NSPR sendMessage, sending: " + parts);
+      nspr.PR_Send(this.fd, buffer, parts.length, 0, nspr.PR_INTERVAL_NO_WAIT);
+    } while (msgoffset < message.length);
   },
 
   close : function() {
     return nspr.PR_Close(this.fd);
+  }
+}
+
+function log(msg) {
+  if (DEBUG_ON) {
+    dump(msg + "\n");
   }
 }

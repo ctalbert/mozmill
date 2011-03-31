@@ -15,7 +15,7 @@ var testContentScreenshot = function() {
   var about = new elementslib.Link(controller.tabs.activeTab, "About Google");
   controller.click(logo);
 
- // controller.screenShot(controller.window, "screen1", [logo, searchForm]);
+  controller.screenShot(controller.window, "screen1", [logo, searchForm]);
  // controller.screenShot(mngb, "screen2", [gb_1]);
  // controller.screenShot(fctr, "screen3", [about]);
  // controller.sleep(10000);

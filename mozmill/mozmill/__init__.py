@@ -53,6 +53,7 @@ from datetime import datetime, timedelta
 from optparse import OptionGroup
 from time import sleep
 
+print "MOZMILLPY:: I am python hear me slither!"
 # metadata
 basedir = os.path.abspath(os.path.dirname(__file__))
 extension_path = os.path.join(basedir, 'extension')
@@ -179,6 +180,7 @@ class MozMill(object):
         self.persisted = obj
 
     def startTest_listener(self, test):
+        print "MOZMILLPY::starttest listner"
         self.current_test = test
 
     def endRunner_listener(self, obj):
@@ -197,11 +199,12 @@ class MozMill(object):
         self.shutdownMode = obj
 
     def screenShot_listener(self, obj): 
+        print "MOZMILLPY::SCREENSHOT: got a obj: " + str(obj)
         self.results.screenshots.append(obj)
     
     def fire_event(self, event, obj):
         """fire an event from the python side"""
-
+        print "MOZMILLPY::fire_event firing event %s with obj %s" % (event, obj)
         # namespace the event
         event = 'mozmill.' + event
 

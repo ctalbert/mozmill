@@ -92,6 +92,7 @@ class Telnet(asyncore.dispatcher):
     def handle_read(self):
         self.data = self.read_all()
         self.process_read(self.data)
+        print "JSBRIDGEPY::Telnet:handle_read: data: %s" % self.data
         
     read_callback = lambda self, data: None
 
@@ -251,6 +252,7 @@ class Bridge(Telnet):
                 self.parsing = False
             # If we got an object fire the callback infra    
             if self.parsing:
+                print "JSBRIDGEPY::process_read: firecallbacks with obj: %s" % obj
                 self.fire_callbacks(obj)
                 self.sbuffer = self.sbuffer[index:]
         
