@@ -39,10 +39,12 @@
 var EXPORTED_SYMBOLS = ["Server", "AsyncRead", "Session", "sessions", "startServer"];
 
 const DEBUG_ON = true;
+const DO_FILE_LOGGING = true;
 const BUFFER_SIZE = 1024;
 var Cc = Components.classes;
 var Ci = Components.interfaces;
 var bridge = {}; Components.utils.import("resource://jsbridge/modules/bridge.js", bridge);
+var gJsbridgeFileLogger = {}; Components.utils.import("resource://jsbridge/modules/jsbridgefilelogger.js", gJsbridgeFileLogger);
 
 var hwindow = Components.classes["@mozilla.org/appshell/appShellService;1"]
     .getService(Components.interfaces.nsIAppShellService)
@@ -62,7 +64,6 @@ AsyncRead.prototype.onStopRequest = function (request, context, status) {
 AsyncRead.prototype.onDataAvailable = function (request, context, inputStream, offset, count) {
   var str = {};
   str.value = '';
-
   var bytesAvail = 0;
   do {
     var parts = {};
@@ -203,6 +204,12 @@ Server.prototype.stop = function () {
     this.serv.close();
     this.sessions.quit();
     this.serv = undefined;
+    
+    // If we have file logging turned on, turn it off
+    if (gJsbridgeFileLogger) {
+      gJsbridgeFileLogger.close();
+      gJsbridgeFileLogger = null;
+    }
 }
 Server.prototype.onStopListening = function (serv, status) {
 // Stub function
@@ -216,6 +223,14 @@ function log(msg) {
   if (DEBUG_ON) {
     dump(msg + '\n');
   }
+  
+  if (DO_FILE_LOGGING) {
+    if (!gJsbridgeFileLogger) {
+      // TODO: You want to change this before you turn it on!!!
+      gJsbridgeFileLogger = new JsbridgeFileLogger("/media/Storage/projects/jsbridge.log");
+    }
+    gJsbridgeFileLogger.write(msg);
+  } 
 }
 
 function startServer(port) {

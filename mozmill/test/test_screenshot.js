@@ -13,10 +13,12 @@ var testContentScreenshot = function() {
   var gb_1 = new elementslib.ID(controller.tabs.activeTab, "gb_1");
   var fctr = new elementslib.ID(controller.tabs.activeTab, "fctr");
   var about = new elementslib.Link(controller.tabs.activeTab, "About Google");
+  controller.click(logo);
 
-  controller.screenShot(controller.window, "screen1", [logo, searchForm]);
-  controller.screenShot(mngb, "screen2", [gb_1]);
-  controller.screenShot(fctr, "screen3", [about]);
+ // controller.screenShot(controller.window, "screen1", [logo, searchForm]);
+ // controller.screenShot(mngb, "screen2", [gb_1]);
+ // controller.screenShot(fctr, "screen3", [about]);
+ // controller.sleep(10000);
 }
 
 var testDialogScreenshot = function() {
@@ -27,14 +29,14 @@ var testDialogScreenshot = function() {
   var startup = new elementslib.ID(prefs.window.document, "paneMain");
   var homepage = new elementslib.ID(prefs.window.document, "browserHomePage");
   
-  controller.screenShot(prefs.window, "screen4", [radio]);
-  controller.screenShot(startup, "screen5", [homepage]);
+  //controller.screenShot(prefs.window, "screen4", [radio]);
+  //controller.screenShot(startup, "screen5", [homepage]);
 }
 
 var testChromeScreenshot = function() {
   var toolbox = new elementslib.ID(controller.window.document, "navigator-toolbox");
   var tabs = new elementslib.ID(controller.window.document, "tabbrowser-tabs");
 
-  controller.screenShot(controller.window, "screen6", [tabs]);
-  controller.screenShot(toolbox, "screen7", [tabs]);
+  //controller.screenShot(controller.window, "screen6", [tabs]);
+  //controller.screenShot(toolbox, "screen7", [tabs]);
 }

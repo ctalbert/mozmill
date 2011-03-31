@@ -268,6 +268,9 @@ class FirefoxProfile(Profile):
                    'extensions.checkCompatibility' : False,
                    'extensions.checkCompatibility.4.0' : False,
                    'extensions.checkCompatibility.4.0b' : False,
+
+                   # Dump statements are cool
+                   'browser.dom.window.dump.enabled' : True,
                    }
 
 class ThunderbirdProfile(Profile):
