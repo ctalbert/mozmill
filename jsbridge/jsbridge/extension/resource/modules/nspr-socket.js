@@ -113,11 +113,13 @@ Client.prototype = {
     bufsize = bufsize || BUFFER_SIZE;
     interval = interval || 100; // polling interval
     var that = this;
+    dump("onMessage: starting up\n");
 
     (function getMessage() {
       var message = '';
       var buffer = null;
       var bytesRemaining = 0;
+      var currentbufsize = 0;
       var bytes = 0;
       do { 
         log("jsbridge::NSPR onMessage: loop starting bufsize: " + bufsize);
@@ -134,26 +136,34 @@ Client.prototype = {
         log("jsbridge::NSPR onMessage: bytes = " + bytes);
         if(bytes > 0) {
           message = message + buffer.readString();
-        } /*else if (bytes == 0) {
-          if (that.handleDisconnect)
+          dump("jsbridge::NSPR onMessage got message: " + message + "\n");
+        } else if (bytes == 0) {
+          dump("jsbridge: bytes == 0\n");
+          if (that.handleDisconnect) {
             log("jsbridge::NSPR onMessage handling disconnect");
             that.handleDisconnect();
-          log("jsbridge::NSPR onMessage returning");
-          return;
-        }*/
+          }
+          //log("jsbridge::NSPR onMessage return from else");
+          //return;
+        }
         // Calculate how many bytes are remaining to be acquired
         bufsize = bufsize - currentbufsize;
         log("jsbridge::NSPR bufsize: " + bufsize + " and bytes: " + bytes);
       } while( (bufsize > 0) && (bytes > 0));
 
-      if (message && bytes > 0) {
+      if (message) {
         log("jsbridge::NSPR onMessage: got data: " + message);
         callback(message);
-      } else {
-        if(that.handleDisconnect)
+      } /*else if (bytes == 0){
+        dump("jsbridge:: in else bytes are: " + bytes + "\n");
+        if(that.handleDisconnect) {
+          dump("handling disconnect\n");
           that.handleDisconnect();
+        }
+        dump("jsbridge: onMessage return from else\n");
         return;
-      }
+      }*/
+      dump("jsbridge: setTimeout for getmessage\n");
       hwindow.setTimeout(getMessage, interval);
     })();
   },
