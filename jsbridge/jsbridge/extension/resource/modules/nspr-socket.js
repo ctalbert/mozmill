@@ -115,12 +115,42 @@ Client.prototype = {
     var that = this;
     dump("onMessage: starting up\n");
 
+    /* OLD WAY */
     (function getMessage() {
+      var buffer = new nspr.buffer(bufsize);
+      var bytes = nspr.PR_Recv(that.fd, buffer, bufsize, 0, nspr.PR_INTERVAL_NO_WAIT);
+      dump("jsbridge:onmessage recv bytes: " + bytes + "\n");
+      if(bytes > 0) {
+        var message = buffer.readString();
+        dump("jsbridge: onMessage got message: " + message + "\n");
+        callback(message);
+      }
+      else if(bytes == 0) {
+        dump("jsbridge: bytes == 0! \n");
+        if(that.handleDisconnect){
+          dump("jsbridge: handling disconnect!\n");
+          that.handleDisconnect();
+        }
+        dump("jsbridge: onMessage return from else\n");
+        return;
+      }
+      dump("jsbridge: settimeout for getmessage\n");
+      hwindow.setTimeout(getMessage, interval);
+    })();
+    /* NEW WAY */
+    /*(function getMessage() {
       var message = '';
       var buffer = null;
       var bytesRemaining = 0;
       var currentbufsize = 0;
       var bytes = 0;
+      
+      // If bufsize = 0 then it hardly makes sense to read from the socket
+      if (bufsize == 0) {
+        log("jsbridge::NSPR getMessage, bufsize of 0, early return");
+        return;
+      }
+      
       do { 
         log("jsbridge::NSPR onMessage: loop starting bufsize: " + bufsize);
         if (bufsize > BUFFER_SIZE) { 
@@ -143,29 +173,22 @@ Client.prototype = {
             log("jsbridge::NSPR onMessage handling disconnect");
             that.handleDisconnect();
           }
-          //log("jsbridge::NSPR onMessage return from else");
-          //return;
+          log("jsbridge::NSPR onMessage return from else");
+          return;
         }
         // Calculate how many bytes are remaining to be acquired
         bufsize = bufsize - currentbufsize;
         log("jsbridge::NSPR bufsize: " + bufsize + " and bytes: " + bytes);
-      } while( (bufsize > 0) && (bytes > 0));
+      } while(0); //while( (bufsize > 0) && (bytes > 0));
 
       if (message) {
         log("jsbridge::NSPR onMessage: got data: " + message);
         callback(message);
-      } /*else if (bytes == 0){
-        dump("jsbridge:: in else bytes are: " + bytes + "\n");
-        if(that.handleDisconnect) {
-          dump("handling disconnect\n");
-          that.handleDisconnect();
-        }
-        dump("jsbridge: onMessage return from else\n");
-        return;
-      }*/
+      } 
       dump("jsbridge: setTimeout for getmessage\n");
       hwindow.setTimeout(getMessage, interval);
-    })();
+    })();*/
+    dump("jsbridge: I'm not sure I get called\n");
   },
 
   onDisconnect : function(callback) {

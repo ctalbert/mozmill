@@ -203,7 +203,8 @@ class MozMill(object):
         self.shutdownMode = obj
 
     def screenShot_listener(self, obj): 
-        print "MOZMILLPY::SCREENSHOT: got a obj: " + str(obj)
+        #print "MOZMILLPY::SCREENSHOT: got a obj: " + str(obj)
+        print "MOZMILLPY::SCREENSHOT: filepath length: %s" % len(obj['filePath'])
         self.results.screenshots.append(obj)
     
     def fire_event(self, event, obj):
@@ -345,7 +346,7 @@ class MozMill(object):
                    'platform_buildid': str(appInfo.platformBuildID),
                    'platform_version': str(appInfo.platformVersion),
                   }
-        results['addons'] = json.loads(mozmill.addons)
+        #results['addons'] = json.loads(mozmill.addons)
         results.update(self.runner.get_repositoryInfo())
         return results
 

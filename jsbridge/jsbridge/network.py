@@ -77,6 +77,7 @@ class Telnet(asyncore.dispatcher):
         return (len(self.buffer) > 0)
 
     def handle_write(self):
+        print "PYTHON SENDING: %s" % self.buffer
         sent = self.send(self.buffer)
         self.buffer = self.buffer[sent:]
         
@@ -92,7 +93,7 @@ class Telnet(asyncore.dispatcher):
     def handle_read(self):
         self.data = self.read_all()
         self.process_read(self.data)
-        print "JSBRIDGEPY::Telnet:handle_read: data: %s" % self.data
+        print "JSBRIDGEPY::read: data: %s" % self.data
         
     read_callback = lambda self, data: None
 
@@ -187,6 +188,7 @@ class Bridge(Telnet):
 
 
         exec_string += '\r\n'
+        print "Bridge.run::Sending: %s" % exec_string
         self.send(exec_string)
 
         while _uuid not in self.callbacks.keys():
@@ -211,6 +213,7 @@ class Bridge(Telnet):
         
     def register(self):
         _uuid = str(uuid.uuid1())
+        print "Bridge.register sending: %s" % 'bridge.register("'+_uuid+'", "'+self.bridge_type+'")'
         self.send('bridge.register("'+_uuid+'", "'+self.bridge_type+'")\r\n')
         self.registered = True
 
