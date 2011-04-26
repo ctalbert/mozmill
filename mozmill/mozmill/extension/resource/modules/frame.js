@@ -227,8 +227,25 @@ events.endTest = function (test) {
   if (test.meta) {
     obj.meta = test.meta;
   }
-  events.fireEvent('endTest', obj);
+  
+  var shouldSkipReporting = false;
+
+  // Report the test result only if the test is a true test or if it is a
+  // failing setup/teardown
+  // TODO: Do we need to do anything on the python side to report the setup/teardown failures differently?
+  if (test.__passes__ && 
+     (test.__name__ == 'setupModule' ||
+      test.__name__ == 'setupTest' ||
+      test.__name__ == 'teardownTest' ||
+      test.__name__ == 'teardownModule')) {
+    shouldSkipReporting = true;
+  }
+  
+  if (!shouldSkipReporting) {                                   
+    events.fireEvent('endTest', obj);
+  }
 }
+
 events.setModule = function (v) {
   return stateChangeBase( null, [function (v) {return (v.__file__ != undefined)}], 
                           'currentModule', 'setModule', v);
